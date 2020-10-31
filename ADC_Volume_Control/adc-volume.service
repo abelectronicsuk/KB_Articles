@@ -1,0 +1,10 @@
+[Unit]
+Description=ADC volume control
+
+[Service]
+User=pi
+Group=pi
+ExecStart=/home/pi/bin/adc-volume-control.py
+
+[Install]
+WantedBy=multi-user.target
