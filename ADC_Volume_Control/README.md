@@ -11,7 +11,7 @@ The Volume Control Daemon has been tested on the Raspberry Pi 3+ and Raspberry P
 ---
 ## Hardware Installation
 
-The volume control daemon is designed for use with the ADC-DAC Pi from AB Electronics UK.  The ADC-DAC Pi uses the MCP3202 ADC from Microchip so this program should be compatible with any ADC board based on the MCP3202.
+The volume control daemon is designed for use with the [ADC-DAC Pi from AB Electronics UK](https://www.abelectronics.co.uk/p/74/adc-dac-pi-zero-raspberry-pi-adc-and-dac-expansion-board).  The ADC-DAC Pi uses the MCP3202 ADC from Microchip so this program should be compatible with any ADC board based on the MCP3202.
 
 The ADC-DAC Pi requires a voltage between 0 and 3.3V.  You can create this using a 10K linear potentiometer with the outer pins connected to 3.3V and ground and the center tap connected to the ADC input.
 ```
