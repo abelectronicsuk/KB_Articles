@@ -24,10 +24,24 @@ import sys
 import time
 
 """
-Settings
+=========================
+Configuration
+=========================
 """
 
-DEBUG = True
+# Audio device name - typical values are 'default' or 'pulse'
+DEV_NAME = 'default'
+
+# Audio mixer name - typical values are 'Headphone', 'PCM', 'HDMI' or 'Master'
+# For a list of available mixers use the command "amixer scontrols"
+MIX_NAME = 'Headphone'
+
+# Volume minimum and maximum as percentages.
+# Set VOL_MIN to the lowest level you can hear sound from your system.
+# Set VOL_MAX to a level that does not distort the sound from your system.
+# VOL_MIN should be 0 or greater.  VOL_MAX should not be greater than 100.
+VOL_MIN = 0
+VOL_MAX = 100
 
 # ADC channel and SPI CS pin
 ADC_CHANNEL = 1
@@ -39,20 +53,14 @@ ADC_CS_PIN = 0
 # touching the potentiometer.
 NOISE = 20
 
-# Volume minimum and maximum as percentages.
-# Set VOL_MIN to the lowest level you can hear sound from your system.
-# Set VOL_MAX to a level that does not distort the sound from your system.
-# VOL_MIN should be 0 or greater.  VOL_MAX should not be greater than 100.
-VOL_MIN = 0
-VOL_MAX = 100
+# Set debug to True to enable logging or False to disable logging.
+DEBUG = True
 
-# Audio device name - typical 'default' or 'pulse'
-DEV_NAME = 'default'
-
-# Audio mixer name - typical 'PCM' 'HDMI' or 'Master'
-# For a list of available mixers use the command "amixer scontrols"
-MIX_NAME = 'HDMI'
-
+"""
+=========================
+End of Configuration
+=========================
+"""
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -84,15 +92,9 @@ class ADC(object):
     def read_adc_raw(self, channel):
         """
         Read the raw value from the selected channel on the ADC
-
-        :param channel: 1 or 2
-        :type channel: int
-        :raises ValueError: read_adc_voltage: channel out of range
-        :return: raw value from ADC, 0 to 4095
-        :rtype: int
         """
         if (channel > 2) or (channel < 1):
-            raise ValueError('read_adc_voltage: channel out of range')
+            debug('read_adc_voltage: channel out of range')
 
         raw = self.spiADC.xfer2([1, (1 + channel) << 6, 0])
         ret = ((raw[1] & 0x0F) << 8) + (raw[2])
@@ -129,8 +131,7 @@ class Volume(object):
         # this reduces volume changes due to noise on the ADC input
         if (adc_val >= self.last + NOISE or adc_val <= self.last - NOISE):
             self.last = adc_val
-            new_volume = (((adc_val / 4095) * 100) *
-                          ((VOL_MAX - VOL_MIN) / 100)) + VOL_MIN
+            new_volume = ((adc_val / 4095) * (VOL_MAX - VOL_MIN)) + VOL_MIN
             vol_str = "{}%".format(int(new_volume))
 
             debug(vol_str)
@@ -146,15 +147,15 @@ class Volume(object):
 if __name__ == "__main__":
     def daemon_exit(args, b):
         debug("Exiting ADC Volume Control")
-        vol.dispose()
+        vol_obj.dispose()
         sys.exit(0)
 
-    vol = Volume()
+    vol_obj = Volume()
 
     signal.signal(signal.SIGINT, daemon_exit)
 
     while True:
-        vol.set_volume()
+        vol_obj.set_volume()
 
         # wait 200ms
         time.sleep(0.2)
