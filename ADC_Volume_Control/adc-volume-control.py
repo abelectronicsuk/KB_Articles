@@ -18,10 +18,12 @@ from __future__ import absolute_import, division, print_function, \
                                                     unicode_literals
 
 import logging
+import math
 import signal
 import spidev
 import sys
 import time
+
 
 """
 =========================
@@ -42,6 +44,12 @@ MIX_NAME = 'Headphone'
 # VOL_MIN should be 0 or greater.  VOL_MAX should not be greater than 100.
 VOL_MIN = 0
 VOL_MAX = 100
+
+# Scale - values can be 'linear' or 'logarithmic'
+# When scale is set to 'linear' the volume will follow a linear response to match the ADC input.
+# When scale is set to 'logarithmic' the volume will follow a logarithmic response compared to the ADC input.
+
+SCALE = "linear"
 
 # ADC channel and SPI CS pin
 ADC_CHANNEL = 1
@@ -118,6 +126,8 @@ class Volume(object):
             debug("VOL_MIN greater than VOL_MAX")
         self.last = 0
         self.adc = ADC()
+        self.new_volume = 0
+        self.vol_range = VOL_MAX - VOL_MIN
 
     def set_volume(self):
         """
@@ -131,9 +141,23 @@ class Volume(object):
         # this reduces volume changes due to noise on the ADC input
         if (adc_val >= self.last + NOISE or adc_val <= self.last - NOISE):
             self.last = adc_val
-            new_volume = ((adc_val / 4095) * (VOL_MAX - VOL_MIN)) + VOL_MIN
-            vol_str = "{}%".format(int(new_volume))
 
+            # check if the scale is linear or log
+            if (SCALE == 'logarithmic'):
+                # calculate a logarithmic value based on the ADC input
+                response = 1.1
+                a = self.vol_range / ((math.log(4095, response) + 1))
+                if adc_val < 1: adc_val = 1
+                self.new_volume = ((math.log(adc_val, response) + 1) * a) + VOL_MIN                
+            else:
+                # calculate a linear value based on the ADC input
+                self.new_volume = ((adc_val / 4095) * (self.vol_range)) + VOL_MIN
+
+            # check the new volume is within the range 0 to 100
+            if self.new_volume < 1: self.new_volume = 0
+            if self.new_volume > 100: self.new_volume = 100
+
+            vol_str = "{}%".format(int(self.new_volume)) 
             debug(vol_str)
             # set the volume using the amixer command
             from subprocess import call

@@ -82,6 +82,11 @@ Maximum volume level as a percentage between 0 and 100.
 Set VOL_MAX to a level that does not distort the sound from your system.  
 VOL_MAX should be greater than VOL_MIN. 
 
+**SCALE**  
+Values can be 'linear' or 'logarithmic'
+When scale is set to 'linear' the volume will follow a linear response to match the ADC input.  
+When scale is set to 'logarithmic' the volume will follow a logarithmic response compared to the ADC input.  
+
 **ADC_CHANNEL**  
 The ADC channel to which the potentiometer or voltage input is connected.  
 Channel value can be 1 or 2.  
